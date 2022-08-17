@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  rabbitmq3:
+    image: rabbitmq:3.8-management-alpine
+    restart: on-failure
+    ports:
+      - '5672:5672' # AMQP protocol port
+      - '15672:15672' # HTTP management UI
+
+  mongodb:
+    image: mongo:5.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    restart: on-failure
+    ports:
+      - '27017:27017'
+
+  mailserver:
+    image: maildev/maildev:2.0.5
+    restart: on-failure
+    ports:
+      - "1025:1025"
+      - "8082:1080"
+
+  mongo-express:
+    image: mongo-express:0.54.0
+    restart: on-failure
+    ports:
+      - '8081:8081'
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: rootpassword
+    links:
+      - 'mongodb'
+    depends_on:
+      - 'mongodb'

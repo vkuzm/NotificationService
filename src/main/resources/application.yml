@@ -1,0 +1,37 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  data:
+    mongodb:
+      authentication-database: admin
+      username: root
+      password: rootpassword
+      database: notification
+      host: localhost
+      post: 27017
+      auto-index-creation: true
+
+  mail:
+    host: localhost
+    port: 1025
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: true
+
+amqp:
+  notification:
+    exchange: 'notification-exchange'
+    routingkeys:
+      email: 'notification.email'
+      sms: 'notification.sms'
+    queues:
+      email: 'notification.email'
+      sms: 'notification.sms'
