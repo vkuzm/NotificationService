@@ -22,6 +22,9 @@ public class MessageSenderServiceImpl implements MessageSenderService {
   @Value("${amqp.notification.routingkeys.sms}")
   private String smsRoutingKey;
 
+  @Value("${amqp.notification.routingkeys.app}")
+  private String appRoutingKey;
+
   @Override
   public void sendEmail(String receiverEmail, MessageDto message) {
     message.setReceiver(receiverEmail);
@@ -34,5 +37,12 @@ public class MessageSenderServiceImpl implements MessageSenderService {
     message.setReceiver(receiverPhoneNumber);
 
     rabbitTemplate.convertAndSend(notificationExchange, smsRoutingKey, message);
+  }
+
+  @Override
+  public void sendNotification(String token, MessageDto message) {
+    message.setToken(token);
+
+    rabbitTemplate.convertAndSend(notificationExchange, appRoutingKey, message);
   }
 }

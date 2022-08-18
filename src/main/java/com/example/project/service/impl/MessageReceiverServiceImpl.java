@@ -6,6 +6,7 @@ import com.example.project.enums.MessageType;
 import com.example.project.model.Message;
 import com.example.project.repository.MessageRepository;
 import com.example.project.service.EmailSenderService;
+import com.example.project.service.FirebaseMessagingService;
 import com.example.project.service.MessageReceiverService;
 import com.example.project.service.SmsSenderService;
 import java.util.Objects;
@@ -21,9 +22,11 @@ public class MessageReceiverServiceImpl implements MessageReceiverService {
 
   private static final String FOUND_DUPLICATED_EMAIL = "Found duplicated email: ";
   private static final String FOUND_DUPLICATED_SMS = "Found duplicated sms: ";
+  private static final String FOUND_DUPLICATED_NOTIFICATION = "Found duplicated app notification: ";
 
   private final EmailSenderService emailSenderService;
   private final SmsSenderService smsSenderService;
+  private final FirebaseMessagingService firebaseMessagingService;
   private final MessageRepository messageRepository;
 
   @Override
@@ -78,6 +81,32 @@ public class MessageReceiverServiceImpl implements MessageReceiverService {
     }
 
     if (isMessageNotSent(existedMessage) && smsSenderService.send(message)) {
+      updateMessageAsSent(message);
+    }
+  }
+
+  @Override
+  @RabbitListener(queues = "${amqp.notification.queues.app}")
+  public void receiveNotification(MessageDto message) {
+    var existedMessage = getMessageByEventId(message);
+
+    if (isMessageSent(existedMessage)) {
+      log.error(FOUND_DUPLICATED_NOTIFICATION + message);
+      return;
+    }
+
+    if (isMessageEmpty(existedMessage)) {
+      var createdNotification = Message.builder()
+          .eventId(message.getEventId())
+          .deviceToken(message.getToken())
+          .message(message.getMessage())
+          .messageType(MessageType.NOTIFICATION)
+          .build();
+
+      messageRepository.save(createdNotification);
+    }
+
+    if (isMessageNotSent(existedMessage) && firebaseMessagingService.sendNotification(message)) {
       updateMessageAsSent(message);
     }
   }

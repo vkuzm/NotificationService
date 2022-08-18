@@ -25,11 +25,17 @@ public class AMQPConfig {
   @Value("${amqp.notification.routingkeys.sms}")
   private String smsRoutingKey;
 
+  @Value("${amqp.notification.routingkeys.app}")
+  private String appRoutingKey;
+
   @Value("${amqp.notification.queues.email}")
   private String emailQueue;
 
   @Value("${amqp.notification.queues.sms}")
   private String smsQueue;
+
+  @Value("${amqp.notification.queues.app}")
+  private String appQueue;
 
   @Bean
   public Queue emailQueue() {
@@ -39,6 +45,11 @@ public class AMQPConfig {
   @Bean
   public Queue smsQueue() {
     return new Queue(smsQueue, false);
+  }
+
+  @Bean
+  public Queue appQueue() {
+    return new Queue(appQueue, false);
   }
 
   @Bean
@@ -58,6 +69,13 @@ public class AMQPConfig {
     return BindingBuilder.bind(smsQueue)
         .to(notificationExchange)
         .with(smsRoutingKey);
+  }
+
+  @Bean
+  public Binding notificationAppBinding(Queue appQueue, TopicExchange notificationExchange) {
+    return BindingBuilder.bind(appQueue)
+        .to(notificationExchange)
+        .with(appRoutingKey);
   }
 
   @Bean

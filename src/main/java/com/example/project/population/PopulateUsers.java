@@ -27,9 +27,11 @@ public class PopulateUsers implements ApplicationRunner {
         .id("1")
         .email("email1@test.com")
         .phoneNumber("+15129985551")
+        .deviceToken("111")
         .notificationSettings(List.of(
             new NotificationSetting(MessageType.EMAIL, true),
-            new NotificationSetting(MessageType.SMS, true)
+            new NotificationSetting(MessageType.SMS, true),
+            new NotificationSetting(MessageType.NOTIFICATION, true)
         ))
         .build()
     );
@@ -38,9 +40,11 @@ public class PopulateUsers implements ApplicationRunner {
         .id("2")
         .email("email2@test.com")
         .phoneNumber("+15129985552")
+        .deviceToken("222")
         .notificationSettings(List.of(
             new NotificationSetting(MessageType.EMAIL, true),
-            new NotificationSetting(MessageType.SMS, false)
+            new NotificationSetting(MessageType.SMS, false),
+            new NotificationSetting(MessageType.NOTIFICATION, false)
         ))
         .build()
     );
@@ -49,9 +53,11 @@ public class PopulateUsers implements ApplicationRunner {
         .id("3")
         .email("email3@test.com")
         .phoneNumber("+15129985553")
+        .deviceToken("333")
         .notificationSettings(List.of(
             new NotificationSetting(MessageType.EMAIL, false),
-            new NotificationSetting(MessageType.SMS, true)
+            new NotificationSetting(MessageType.SMS, true),
+            new NotificationSetting(MessageType.NOTIFICATION, true)
         ))
         .build()
     );

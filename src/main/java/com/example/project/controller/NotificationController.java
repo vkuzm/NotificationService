@@ -31,6 +31,7 @@ public class NotificationController {
 
   private static final String EMAIL_VALIDATION_FAILED = "Email validation failed: ";
   private static final String SMS_VALIDATION_FAILED = "Sms validation failed: ";
+  private static final String NOTIFICATION_VALIDATION_FAILED = "Notification validation failed: ";
 
   private final MessageSenderService messageEmailSenderService;
   private final MessageSenderService messageSmsSenderService;
@@ -44,14 +45,7 @@ public class NotificationController {
     Optional<User> user = userRepository.findById(message.getUserId());
 
     if (user.isEmpty()) {
-      var error = ErrorMessageDto.builder()
-          .errorCode(MessageError.USER_NOT_FOUND)
-          .errorMessage(MessageError.USER_NOT_FOUND.getMessage())
-          .build();
-
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
-          .body(List.of(error));
+      return getUserNotFoundBadRequest();
     }
 
     if (isNotificationTypeNotAllowed(user.get(), MessageType.EMAIL)) {
@@ -81,24 +75,6 @@ public class NotificationController {
       errorMessages.add(error);
     }
 
-    if (message.getSubject().isEmpty()) {
-      var error = ErrorMessageDto.builder()
-          .errorCode(MessageError.EMAIL_SUBJECT_EMPTY)
-          .errorMessage(MessageError.EMAIL_SUBJECT_EMPTY.getMessage())
-          .build();
-
-      errorMessages.add(error);
-    }
-
-    if (message.getMessage().isEmpty()) {
-      var error = ErrorMessageDto.builder()
-          .errorCode(MessageError.EMAIL_MESSAGE_EMPTY)
-          .errorMessage(MessageError.EMAIL_MESSAGE_EMPTY.getMessage())
-          .build();
-
-      errorMessages.add(error);
-    }
-
     if (!MessageFormat.exists(message.getMessageFormat())) {
       var error = ErrorMessageDto.builder()
           .errorCode(MessageError.MESSAGE_TYPE_INCORRECT)
@@ -108,11 +84,18 @@ public class NotificationController {
       errorMessages.add(error);
     }
 
+    if (message.getSubject().isEmpty()) {
+      errorMessages.add(getSubjectEmptyError());
+    }
+
+    if (message.getMessage().isEmpty()) {
+      errorMessages.add(getMessageEmptyError());
+    }
+
     if (!errorMessages.isEmpty()) {
       log.error(EMAIL_VALIDATION_FAILED + errorMessages);
 
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(errorMessages);
     }
 
@@ -126,29 +109,13 @@ public class NotificationController {
     Optional<User> user = userRepository.findById(message.getUserId());
 
     if (user.isEmpty()) {
-      var error = ErrorMessageDto.builder()
-          .errorCode(MessageError.USER_NOT_FOUND)
-          .errorMessage(MessageError.USER_NOT_FOUND.getMessage())
-          .build();
-
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
-          .body(List.of(error));
+      return getUserNotFoundBadRequest();
     }
 
     if (isNotificationTypeNotAllowed(user.get(), MessageType.SMS)) {
       var error = ErrorMessageDto.builder()
           .errorCode(MessageError.NOTIFICATION_SMS_NOT_ALLOWED)
           .errorMessage(MessageError.NOTIFICATION_SMS_NOT_ALLOWED.getMessage())
-          .build();
-
-      errorMessages.add(error);
-    }
-
-    if (message.getSender().isEmpty()) {
-      var error = ErrorMessageDto.builder()
-          .errorCode(MessageError.SENDER_EMPTY)
-          .errorMessage(MessageError.SENDER_EMPTY.getMessage())
           .build();
 
       errorMessages.add(error);
@@ -164,25 +131,100 @@ public class NotificationController {
       errorMessages.add(error);
     }
 
-    if (message.getMessage().isEmpty()) {
-      var error = ErrorMessageDto.builder()
-          .errorCode(MessageError.EMAIL_MESSAGE_EMPTY)
-          .errorMessage(MessageError.EMAIL_MESSAGE_EMPTY.getMessage())
-          .build();
+    if (message.getSender().isEmpty()) {
+      errorMessages.add(getSenderEmptyError());
+    }
 
-      errorMessages.add(error);
+    if (message.getMessage().isEmpty()) {
+      errorMessages.add(getMessageEmptyError());
     }
 
     if (!errorMessages.isEmpty()) {
       log.error(SMS_VALIDATION_FAILED + errorMessages);
 
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(errorMessages);
     }
 
     messageSmsSenderService.sendSms(user.get().getPhoneNumber(), message);
     return ResponseEntity.ok().build();
+  }
+
+  @PostMapping("/notification/send")
+  public ResponseEntity<List<ErrorMessageDto>> sendNotification(@RequestBody MessageDto message) {
+    List<ErrorMessageDto> errorMessages = new ArrayList<>();
+    Optional<User> user = userRepository.findById(message.getUserId());
+
+    if (user.isEmpty()) {
+      return getUserNotFoundBadRequest();
+    }
+
+    if (isNotificationTypeNotAllowed(user.get(), MessageType.NOTIFICATION)) {
+      var error = ErrorMessageDto.builder()
+          .errorCode(MessageError.NOTIFICATION_APP_NOT_ALLOWED)
+          .errorMessage(MessageError.NOTIFICATION_APP_NOT_ALLOWED.getMessage())
+          .build();
+
+      errorMessages.add(error);
+    }
+
+    if (user.get().getDeviceToken().isEmpty()) {
+      var error = ErrorMessageDto.builder()
+          .errorCode(MessageError.NOTIFICATION_TOKEN_EMPTY)
+          .errorMessage(MessageError.NOTIFICATION_TOKEN_EMPTY.getMessage())
+          .build();
+
+      errorMessages.add(error);
+    }
+
+    if (message.getSubject().isEmpty()) {
+      errorMessages.add(getSubjectEmptyError());
+    }
+
+    if (message.getMessage().isEmpty()) {
+      errorMessages.add(getMessageEmptyError());
+    }
+
+    if (!errorMessages.isEmpty()) {
+      log.error(NOTIFICATION_VALIDATION_FAILED + errorMessages);
+
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(errorMessages);
+    }
+
+    messageSmsSenderService.sendNotification(user.get().getDeviceToken(), message);
+    return ResponseEntity.ok().build();
+  }
+
+  private ResponseEntity<List<ErrorMessageDto>> getUserNotFoundBadRequest() {
+    var error = ErrorMessageDto.builder()
+        .errorCode(MessageError.USER_NOT_FOUND)
+        .errorMessage(MessageError.USER_NOT_FOUND.getMessage())
+        .build();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(List.of(error));
+  }
+
+  private ErrorMessageDto getMessageEmptyError() {
+    return ErrorMessageDto.builder()
+        .errorCode(MessageError.MESSAGE_EMPTY)
+        .errorMessage(MessageError.MESSAGE_EMPTY.getMessage())
+        .build();
+  }
+
+  private ErrorMessageDto getSenderEmptyError() {
+    return ErrorMessageDto.builder()
+        .errorCode(MessageError.SENDER_EMPTY)
+        .errorMessage(MessageError.SENDER_EMPTY.getMessage())
+        .build();
+  }
+
+  private ErrorMessageDto getSubjectEmptyError() {
+    return ErrorMessageDto.builder()
+        .errorCode(MessageError.SUBJECT_EMPTY)
+        .errorMessage(MessageError.SUBJECT_EMPTY.getMessage())
+        .build();
   }
 
   private boolean isNotificationTypeNotAllowed(User user, MessageType messageType) {

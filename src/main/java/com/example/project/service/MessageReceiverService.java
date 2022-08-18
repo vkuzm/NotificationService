@@ -7,4 +7,6 @@ public interface MessageReceiverService {
   void receiveEmail(MessageDto message);
 
   void receiveSms(MessageDto message);
+
+  void receiveNotification(MessageDto message);
 }

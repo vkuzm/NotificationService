@@ -31,12 +31,16 @@ public class FailedNotificationsReSender {
   @Value("${amqp.notification.routingkeys.sms}")
   private String smsRoutingKey;
 
+  @Value("${amqp.notification.routingkeys.app}")
+  private String appRoutingKey;
+
   @Async
   @Scheduled(fixedRate = 30, timeUnit = TimeUnit.SECONDS)
   @Transactional
   public void run() {
     resendFailedEmails();
     resendFailedSms();
+    resendFailedNotification();
   }
 
   private void resendFailedEmails() {
@@ -56,6 +60,16 @@ public class FailedNotificationsReSender {
 
     for (Message message : smsList) {
       rabbitTemplate.convertAndSend(notificationExchange, smsRoutingKey, message);
+    }
+  }
+
+  private void resendFailedNotification() {
+    List<Message> notificationList = messageRepository.findAllByMessageTypeAndSentFalse(MessageType.NOTIFICATION);
+
+    log.info("Notification to resend: " + notificationList.size());
+
+    for (Message message : notificationList) {
+      rabbitTemplate.convertAndSend(notificationExchange, appRoutingKey, message);
     }
   }
 }

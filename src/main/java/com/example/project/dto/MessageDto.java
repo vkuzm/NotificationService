@@ -10,6 +10,7 @@ public class MessageDto {
   private String eventId;
   private String userId;
   private String receiver;
+  private String token;
   private String sender;
   private String subject;
   private String message;

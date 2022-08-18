@@ -17,6 +17,7 @@ public class Message {
   @Indexed(unique = true)
   private String eventId;
   private String receiver;
+  private String deviceToken;
   private String sender;
   private String subject;
   private String message;

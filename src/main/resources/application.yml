@@ -32,6 +32,13 @@ amqp:
     routingkeys:
       email: 'notification.email'
       sms: 'notification.sms'
+      app: 'notification.app'
     queues:
       email: 'notification.email'
       sms: 'notification.sms'
+      app: 'notification.app'
+
+firebase:
+  config:
+    appname: 'my-app'
+    filename: 'firebase-service-account.json'
