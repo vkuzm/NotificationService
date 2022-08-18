@@ -1,5 +1,6 @@
 package com.example.project.model;
 
+import com.example.project.enums.MessageFormat;
 import com.example.project.enums.MessageType;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class Message {
   private String sender;
   private String subject;
   private String message;
+  private MessageFormat messageFormat;
   private MessageType messageType;
   private boolean sent;
 }

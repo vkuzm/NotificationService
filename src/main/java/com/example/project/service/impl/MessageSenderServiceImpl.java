@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service("messageEmailSenderService")
 @RequiredArgsConstructor
-public class MessageEmailSenderServiceImpl implements MessageSenderService {
+public class MessageSenderServiceImpl implements MessageSenderService {
 
   private final AmqpTemplate rabbitTemplate;
 
@@ -19,8 +19,20 @@ public class MessageEmailSenderServiceImpl implements MessageSenderService {
   @Value("${amqp.notification.routingkeys.email}")
   private String emailRoutingKey;
 
+  @Value("${amqp.notification.routingkeys.sms}")
+  private String smsRoutingKey;
+
   @Override
-  public void send(MessageDto message) {
+  public void sendEmail(String receiverEmail, MessageDto message) {
+    message.setReceiver(receiverEmail);
+
     rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, message);
+  }
+
+  @Override
+  public void sendSms(String receiverPhoneNumber, MessageDto message) {
+    message.setReceiver(receiverPhoneNumber);
+
+    rabbitTemplate.convertAndSend(notificationExchange, smsRoutingKey, message);
   }
 }

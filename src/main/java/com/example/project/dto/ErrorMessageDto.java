@@ -1,5 +1,6 @@
 package com.example.project.dto;
 
+import com.example.project.enums.MessageError;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 @Builder
 public class ErrorMessageDto {
-  private String errorCode;
+
+  private MessageError errorCode;
   private String errorMessage;
 }

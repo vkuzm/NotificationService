@@ -1,8 +1,8 @@
 package com.example.project.schedule;
 
+import com.example.project.enums.MessageType;
 import com.example.project.model.Message;
-import com.example.project.repository.EmailRepository;
-import com.example.project.repository.SmsRepository;
+import com.example.project.repository.MessageRepository;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class NotificationReSender {
+public class FailedNotificationsReSender {
 
   private final AmqpTemplate rabbitTemplate;
-  private final EmailRepository emailRepository;
-  private final SmsRepository smsRepository;
+  private final MessageRepository messageRepository;
 
   @Value("${amqp.notification.exchange}")
   private String notificationExchange;
@@ -36,22 +35,22 @@ public class NotificationReSender {
   @Scheduled(fixedRate = 30, timeUnit = TimeUnit.SECONDS)
   @Transactional
   public void run() {
-    resendEmails();
-    resendSms();
+    resendFailedEmails();
+    resendFailedSms();
   }
 
-  private void resendEmails() {
-    List<Message> emailList = emailRepository.findAllBySentFalse();
+  private void resendFailedEmails() {
+    List<Message> emailList = messageRepository.findAllByMessageTypeAndSentFalse(MessageType.EMAIL);
 
-    log.info("Emails to resend: " + emailList.size());
+    log.info("Email to resend: " + emailList.size());
 
     for (Message message : emailList) {
       rabbitTemplate.convertAndSend(notificationExchange, emailRoutingKey, message);
     }
   }
 
-  private void resendSms() {
-    List<Message> smsList = smsRepository.findAllBySentFalse();
+  private void resendFailedSms() {
+    List<Message> smsList = messageRepository.findAllByMessageTypeAndSentFalse(MessageType.SMS);
 
     log.info("Sms to resend: " + smsList.size());
 

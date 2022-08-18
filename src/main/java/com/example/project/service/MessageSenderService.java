@@ -4,5 +4,7 @@ import com.example.project.dto.MessageDto;
 
 public interface MessageSenderService {
 
-  void send(MessageDto message);
+  void sendEmail(String receiver, MessageDto message);
+
+  void sendSms(String receiver, MessageDto message);
 }

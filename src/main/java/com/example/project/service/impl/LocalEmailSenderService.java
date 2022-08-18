@@ -1,7 +1,7 @@
 package com.example.project.service.impl;
 
 import com.example.project.dto.MessageDto;
-import com.example.project.enums.MessageType;
+import com.example.project.enums.MessageFormat;
 import com.example.project.service.EmailSenderService;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -17,24 +17,28 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LocalEmailSenderService implements EmailSenderService {
 
+  private static final String MESSAGE_ENCODING = "UTF-8";
+  private static final String EMAIL_SENT_MESSAGE = "Email was sent: ";
+  private static final String EMAIL_NOT_SENT_MESSAGE = "Email was not sent: ";
+
   private final JavaMailSender emailSender;
 
   @Override
   public boolean send(MessageDto message) {
     try {
       var mailMessage = emailSender.createMimeMessage();
-      var helper = new MimeMessageHelper(mailMessage, "UTF-8");
+      var helper = new MimeMessageHelper(mailMessage, MESSAGE_ENCODING);
       helper.setFrom(new InternetAddress(message.getSender()));
       helper.setTo(message.getReceiver());
       helper.setSubject(message.getSubject());
-      helper.setText(message.getMessage(),message.getMessageType() == MessageType.HTML);
+      helper.setText(message.getMessage(), message.getMessageFormat().equals(MessageFormat.HTML.name()));
 
       emailSender.send(mailMessage);
-      log.info("Email was sent: " + message);
+      log.info(EMAIL_SENT_MESSAGE + message);
       return true;
 
     } catch (MailException | MessagingException e) {
-      log.error("Email was not sent: " + message, e);
+      log.error(EMAIL_NOT_SENT_MESSAGE + message, e);
       return false;
     }
   }

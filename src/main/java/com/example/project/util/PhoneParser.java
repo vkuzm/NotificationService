@@ -8,14 +8,15 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public final class PhoneParser {
 
-  private final static PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+  private static final String PARSING_ERROR_MESSAGE = "Error occurred while parsing phone number: ";
+  private static final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
 
   public static PhoneNumber parse(String phoneNumber) {
     try {
       return phoneNumberUtil.parse(phoneNumber, "");
 
     } catch (NumberParseException e) {
-      log.error("Error occurred while parsing phone number: " + phoneNumber);
+      log.error(PARSING_ERROR_MESSAGE + phoneNumber);
     }
 
     return new PhoneNumber();
